@@ -1,17 +1,25 @@
-import * as fs from 'fs';
-import Buffer from 'buffer';// remove this line
+import fs from 'fs';
+
 export const UploadRoute = (app: any) => {
     app.post("/upload", (req, res) => {
-        const files = req.body.files;
-        const fileName = files[0].fileName;
-        const fileBytes = files[0].fileBytes;
-        const buffer = Buffer.from(fileBytes as any);
-        fs.writeFile(fileName, buffer, (err) => {
-            if (err) {
-                res.send({error: err,response:null});
-            } else {
-                res.send({error: null,response:fileName});
-            }
+        const files:xFile[] = req.body.files;
+        const firstFile = files[0]
+        WriteFile(firstFile, (err) => {
+          if (err) {
+            res.send({ error: err, response: null });
+          } else {
+            res.send({ error: null, response: firstFile.fileName });
+          }
         });
     });
+}
+
+
+const WriteFile = ({ fileName, b64 }: xFile, cb: (err: any) => void) => {
+    fs.writeFile(fileName, b64.replace(/^data:([A-Za-z-+/]+);base64,/, ''),'base64', cb);
+};
+
+export interface xFile {
+  b64: string;
+  fileName: string;
 }

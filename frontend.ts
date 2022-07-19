@@ -1,27 +1,37 @@
 
-// FrontEndt
-  const GetFileUint8Array = async (file: File) => {
-    let fileBytes = await GetFileBytes(file);    
+// Frontend
+  const GetFilesToB64 = async (files: File[]) => {
+    let filesB64: {
+      b64: string;
+      fileName: string;
+    }[] = [];
+    for (let i = 0; i < files.length; i++) {
+      let file = files[i];
+      let fb64 = await GetFileToB64(file);
+      filesB64.push(fb64);
+    }
+    return filesB64;
+  };
+
+  const GetFileToB64 = async (file: File) => {
+    let b64 = await ReadFile(file);
     let fileName = file.name;
     return {
-        fileBytes,
-        fileName
+      b64,
+      fileName,
     };
-  }
+  };
 
-  const GetFileBytes = (file: File) => {
-    return new Promise<ArrayBuffer>((resolve) => {
+  const ReadFile = (file: File) => {
+    return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (e: any) => {
-        let arrayBuffer: ArrayBuffer = reader.result as ArrayBuffer;
-        let fileBytes = new Uint8Array(arrayBuffer);
-        resolve(fileBytes);
-      };
-      reader.readAsArrayBuffer(file);
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
     });
-  }
+  };
 
   const SendFile = async (http:any, file: File) => {
-    let fileBytes = await GetFileUint8Array(file);
-    return http.post("/upload", { files: [fileBytes] });
+    let fileB64 = await GetFileToB64(file);
+    return http.post("/upload", { files: [fileB64] });
   }
