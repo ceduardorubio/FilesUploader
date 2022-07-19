@@ -1,25 +1,17 @@
-import fs from 'fs';
-//backend
-export const UploadRoute = (app: any) => {
-    app.post("/upload", (req, res) => {
-        const files:xFile[] = req.body.files;
-        const firstFile = files[0]
-        WriteFile(firstFile, (err) => {
-          if (err) {
-            res.send({ error: err, response: null });
-          } else {
-            res.send({ error: null, response: firstFile.fileName });
-          }
-        });
-    });
-}
+const port = process.env.PORT || 3000;
+import express from "express";
+import cors from "cors";
+import compression from "compression";
 
+import { Routes } from "./routes";
+const app = express();
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+app.use(compression());
+app.use(cors());
 
-const WriteFile = ({ fileName, b64 }: xFile, cb: (err: any) => void) => {
-    fs.writeFile(fileName, b64.replace(/^data:([A-Za-z-+/]+);base64,/, ''),'base64', cb);
-};
+Routes(app);
 
-export interface xFile {
-  b64: string;
-  fileName: string;
-}
+app.listen(port, () => {
+  console.log(`Running on PORT ${port}.`);
+});
